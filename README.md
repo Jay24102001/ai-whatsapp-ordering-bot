@@ -25,5 +25,13 @@ A WhatsApp-based AI restaurant ordering system that allows customers to browse t
 ## Repository
 https://github.com/Jay24102001/ai-whatsapp-ordering-bot
 
+## Screenshots
+(screenshots/Screenshot%202025-12-13%20at%201.43.20 AM.png)
+(screenshots/Screenshot%202025-12-13%20at%201.50.42 AM.png)
+(screenshots/Screenshot%202025-12-13%20at%201.50.58 AM.png)
+(screenshots/Screenshot%202025-12-13%20at%201.51.26 AM.png)
+(screenshots/Screenshot%202025-12-13%20at%201.51.50 AM.png)
+(screenshots/Screenshot%202025-12-13%20at%202.37.58 AM.png)
+
 ## Author
 Jayesh Khushalani
