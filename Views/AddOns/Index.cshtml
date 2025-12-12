@@ -1,0 +1,46 @@
+@model IEnumerable<AiBotOrderingSystem.Models.DbFirst.Addon>
+
+@{
+    ViewData["Title"] = "Addons";
+}
+
+<h2 class="mb-3">Addons</h2>
+
+<!-- Show validation / error message -->
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">+ Add Addon</a>
+</p>
+
+<table class="table table-striped table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width: 200px;">Name</th>
+            <th style="width: 120px;">Price</th>
+            <th style="width: 120px;">Active</th>
+            <th style="width: 200px;">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.Name</td>
+                <td>₹@a.Price.ToString("0.00")</td>
+                <td>@((a.IsActive) ? "Yes" : "No")</td>
+
+                <td>
+                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@a.Id">Edit</a>
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@a.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

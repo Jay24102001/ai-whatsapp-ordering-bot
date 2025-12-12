@@ -1,0 +1,17 @@
+# .NET build artifacts
+bin/
+obj/
+.vs/
+
+# App secrets
+appsettings.Development.json
+.env
+
+# Logs & temp files
+*.log
+*.db
+temp.cs
+
+# OS files
+.DS_Store
+Thumbs.db

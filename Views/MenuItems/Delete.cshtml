@@ -1,0 +1,29 @@
+@model AiBotOrderingSystem.Models.DbFirst.MenuItem
+
+@{
+    ViewData["Title"] = "Delete Menu Item";
+}
+
+<h2>Delete Menu Item</h2>
+
+<div>
+    <h4>@Model.Name</h4>
+    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+    {
+        <img src="@Model.ImageUrl" style="max-width:120px;max-height:120px;" />
+    }
+    <div>
+        <dl class="row">
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@Model.Category?.Name</dd>
+            <dt class="col-sm-3">Price</dt>
+            <dd class="col-sm-9">@Model.Price.ToString("0.00")</dd>
+        </dl>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

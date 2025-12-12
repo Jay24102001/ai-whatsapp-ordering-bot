@@ -1,0 +1,279 @@
+@using AiBotOrderingSystem.Models.ViewModels
+@model AiBotOrderingSystem.Models.ViewModels.MenuPageVm
+@{
+    ViewData["Title"] = "Menu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Menu</h2>
+
+    <a class="btn btn-outline-primary position-relative" asp-controller="Orders" asp-action="Cart">
+        Cart
+        <span id="cartCount" class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">0</span>
+    </a>
+</div>
+
+<!-- Category Filters -->
+<div class="mb-3">
+    <strong>Categories</strong>
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-outline-secondary category-filter" data-cat="0">All</button>
+        @foreach (var c in Model.Categories)
+        {
+            <button class="btn btn-sm btn-outline-secondary category-filter" data-cat="@c.Id">@c.Name</button>
+        }
+    </div>
+</div>
+
+<!-- Menu Grid -->
+<div id="menu-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+    @foreach (var item in Model.MenuItems)
+    {
+        <div class="col menu-card" data-cat="@item.CategoryId" data-id="@item.Id">
+            <div class="card h-100 shadow-sm">
+                <div style="height:160px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8f9fa;">
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" class="card-img-top" style="max-height:160px; width:auto;" alt="@item.Name" />
+                    }
+                    else
+                    {
+                        <div class="text-muted">No image</div>
+                    }
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@item.Name</h5>
+                    <p class="card-text text-muted mb-1">@item.Description</p>
+
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>₹@item.Price.ToString("0.00")</strong>
+                            @* <div class="small text-muted">Category: @item.CategoryId</div> *@
+                            <div class="small text-muted">Category: @item.CategoryId</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" data-action="open-offcanvas" data-id="@item.Id">Add / Addons</button>
+                            <button class="btn btn-sm btn-primary" data-action="quick-add" data-id="@item.Id" data-name="@item.Name" data-price="@item.Price">Quick Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Right Mini Cart -->
+<div class="mt-4">
+    <h4>Your Cart</h4>
+    <div id="cart-placeholder" class="mb-2"></div>
+    <div class="mt-2">
+        <a href="/Orders/Cart" class="btn btn-success">Go to Cart / Checkout</a>
+    </div>
+</div>
+
+<!-- Offcanvas Addon UI -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="addonOffcanvas" aria-labelledby="addonOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 id="addonOffcanvasLabel">Add-ons</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="menuItemSummary" class="mb-3"></div>
+
+        <form id="addToCartForm" onsubmit="return false;">
+            <input type="hidden" id="offcanvasMenuItemId" />
+
+            <div id="addonsList" class="mb-3"></div>
+
+            <div class="mb-3">
+                <label for="qty">Quantity</label>
+                <input type="number" id="qty" class="form-control" value="1" min="1" />
+            </div>
+
+            <div class="mb-3">
+                <strong>Total: ₹<span id="calculatedTotal">0.00</span></strong>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Close</button>
+                <button id="addToCartBtn" type="button" class="btn btn-primary">Add to Cart</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- Build safe client-side menu data (projected, avoids EF cycles) ---
+        const menuData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.MenuItems.ToDictionary(
+                x => x.Id,
+                x => new {
+                    x.Id,
+                    x.Name,
+                    Price = x.Price,
+                    x.Description,
+                    x.ImageUrl,
+                    x.CategoryId,
+                    CategoryName = Model.Categories.FirstOrDefault(c => c.Id == x.CategoryId)?.Name,
+                    Addons = (Model.Addons ?? new List<AddonVm>())
+                        .Where(a => a.Id == x.Id)
+                        .Select(a => new { a.Id, a.Name, a.Price })
+                })
+        ));
+
+        // CART helper functions (localStorage)
+        function getCart() { return JSON.parse(localStorage.getItem('aibot_cart') || '[]'); }
+        function saveCart(c) { localStorage.setItem('aibot_cart', JSON.stringify(c)); }
+
+        function renderMiniCart() {
+            const cart = getCart();
+            const cartCountEl = document.getElementById('cartCount');
+            if (cartCountEl) cartCountEl.innerText = cart.reduce((s, it) => s + (it.quantity || 0), 0);
+
+            const el = document.getElementById('cart-placeholder');
+            if (!el) return;
+
+            if (!cart || cart.length === 0) {
+                el.innerHTML = '<div class="text-muted">Cart is empty</div>';
+                return;
+            }
+
+            let html = '<ul class="list-group">';
+            cart.forEach(it => {
+                const line = (it.price || 0) * (it.quantity || 1);
+                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${it.name} x ${it.quantity}
+                            <span>₹${line.toFixed(2)}</span>
+                         </li>`;
+            });
+            html += '</ul>';
+            el.innerHTML = html;
+        }
+
+        // Event delegation for quick-add and open-offcanvas
+        document.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!t) return;
+
+            // quick add
+            const quick = t.closest('[data-action="quick-add"]');
+            if (quick) {
+                const id = parseInt(quick.getAttribute('data-id'));
+                const name = quick.getAttribute('data-name');
+                const price = parseFloat(quick.getAttribute('data-price') || '0');
+
+                const cart = getCart();
+                const found = cart.find(x => x.menuItemId === id);
+                if (found) found.quantity++;
+                else cart.push({ menuItemId: id, name, price, quantity: 1, addons: [] });
+
+                saveCart(cart);
+                renderMiniCart();
+                alert(`${name} added to cart`);
+                return;
+            }
+
+            // open offcanvas
+            const openBtn = t.closest('[data-action="open-offcanvas"]');
+            if (openBtn) {
+                const id = parseInt(openBtn.getAttribute('data-id'));
+                openOffcanvas(id);
+            }
+        });
+
+        // Category filter
+        document.addEventListener('click', (e) => {
+            if (!e.target.matches('.category-filter')) return;
+            const cat = e.target.getAttribute('data-cat');
+            document.querySelectorAll('.menu-card').forEach(card => {
+                if (cat === "0" || card.getAttribute('data-cat') === cat) card.style.display = '';
+                else card.style.display = 'none';
+            });
+        });
+
+        // Open offcanvas and populate addons
+        function openOffcanvas(menuItemId) {
+            const selected = menuData[menuItemId];
+            if (!selected) {
+                alert('Menu item not found');
+                return;
+            }
+
+            document.getElementById('offcanvasMenuItemId').value = menuItemId;
+            document.getElementById('menuItemSummary').innerHTML = `<h5>${selected.Name}</h5><p>₹${selected.Price.toFixed(2)}</p>`;
+
+            // build addons
+            let addonHtml = '';
+            if (selected.Addons && selected.Addons.length > 0) {
+                selected.Addons.forEach(a => {
+                    addonHtml += `
+                        <div class="form-check">
+                            <input class="form-check-input addon-check" type="checkbox" value="${a.Price}" data-name="${a.Name}" id="addon_${a.Id}">
+                            <label class="form-check-label" for="addon_${a.Id}">${a.Name} (+₹${a.Price})</label>
+                        </div>
+                    `;
+                });
+            } else {
+                addonHtml = '<div class="text-muted">No addons available</div>';
+            }
+
+            document.getElementById('addonsList').innerHTML = addonHtml;
+            document.getElementById('qty').value = 1;
+            calculateTotal();
+
+            const offcanvasEl = document.getElementById('addonOffcanvas');
+            const bs = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+            bs.show();
+        }
+
+        // Calculate total shown in offcanvas
+        function calculateTotal() {
+            const id = parseInt(document.getElementById('offcanvasMenuItemId').value || '0');
+            const qty = Math.max(1, parseInt(document.getElementById('qty').value || '1'));
+            const selected = menuData[id];
+            if (!selected) return;
+
+            const basePrice = parseFloat(selected.Price || 0);
+            let addonTotal = 0;
+            document.querySelectorAll('.addon-check:checked').forEach(a => addonTotal += parseFloat(a.value || 0));
+
+            const total = (basePrice + addonTotal) * qty;
+            document.getElementById('calculatedTotal').innerText = total.toFixed(2);
+        }
+
+        // change handlers
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'qty' || e.target.classList.contains('addon-check')) calculateTotal();
+        });
+
+        // Add to cart from offcanvas
+        document.getElementById('addToCartBtn').addEventListener('click', () => {
+            const id = parseInt(document.getElementById('offcanvasMenuItemId').value || '0');
+            const qty = Math.max(1, parseInt(document.getElementById('qty').value || '1'));
+            const selected = menuData[id];
+            if (!selected) return alert('Invalid item');
+
+            const addons = [];
+            document.querySelectorAll('.addon-check:checked').forEach(a => {
+                addons.push({ name: a.dataset.name, price: parseFloat(a.value || 0) });
+            });
+
+            const cart = getCart();
+            cart.push({ menuItemId: id, name: selected.Name, price: selected.Price, quantity: qty, addons });
+            saveCart(cart);
+            renderMiniCart();
+
+            const offcanvasEl = document.getElementById('addonOffcanvas');
+            const bs = bootstrap.Offcanvas.getInstance(offcanvasEl);
+            if (bs) bs.hide();
+
+            alert(`${selected.Name} added to cart`);
+        });
+
+        // initial
+        renderMiniCart();
+    </script>
+}

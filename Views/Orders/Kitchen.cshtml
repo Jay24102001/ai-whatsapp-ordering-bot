@@ -1,0 +1,143 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Kitchen - Live Orders";
+}
+
+<link rel="stylesheet" href="~/css/kitchen.css" />
+
+<div class="kitchen-page container-fluid py-3">
+
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="me-3">Kitchen Display</h3>
+        <span class="badge bg-primary ms-auto" id="liveIndicator">Live</span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ================= IN KITCHEN ================= -->
+        <div class="col-lg-4">
+            <h5 class="section-title mb-2">In Kitchen</h5>
+            <div id="col-in-kitchen" class="orders-column">
+
+                @foreach (var o in Model.InKitchen)
+                {
+                    <div class="order-card" data-order-id="@o.Id">
+
+                        <div class="order-header">
+                            <strong>Order #@o.Id</strong>
+                            <small class="text-muted">
+                                @((o.CustomerName ?? "Walk-in"))
+                                • @o.CreatedAt?.ToLocalTime().ToString("HH:mm")
+                            </small>
+                        </div>
+
+                        <div class="order-body">
+                            @foreach (var it in o.OrderItems)
+                            {
+                                <div class="line-item">
+                                    <div><strong>@it.MenuItem?.Name</strong> x @it.Quantity</div>
+                                    <div class="text-muted small">@it.LineTotal.ToString("0.00")</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="order-footer d-flex justify-content-between align-items-center">
+                            <div><strong>Total:</strong> @((o.TotalAmount ?? 0).ToString("0.00"))</div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-success move-next" data-id="@o.Id">Move Next</button>
+                                <button class="btn btn-sm btn-outline-secondary move-back" data-id="@o.Id">Move Back</button>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ================= PREPARING ================= -->
+        <div class="col-lg-4">
+            <h5 class="section-title mb-2">Preparing</h5>
+            <div id="col-preparing" class="orders-column">
+
+                @foreach (var o in Model.Preparing)
+                {
+                    <div class="order-card" data-order-id="@o.Id">
+
+                        <div class="order-header">
+                            <strong>Order #@o.Id</strong>
+                            <small class="text-muted">
+                                @((o.CustomerName ?? "Walk-in"))
+                                • @o.CreatedAt?.ToLocalTime().ToString("HH:mm")
+                            </small>
+                        </div>
+
+                        <div class="order-body">
+                            @foreach (var it in o.OrderItems)
+                            {
+                                <div class="line-item">
+                                    <div><strong>@it.MenuItem?.Name</strong> x @it.Quantity</div>
+                                    <div class="text-muted small">@it.LineTotal.ToString("0.00")</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="order-footer d-flex justify-content-between align-items-center">
+                            <div><strong>Total:</strong> @((o.TotalAmount ?? 0).ToString("0.00"))</div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-success move-next" data-id="@o.Id">Move Next</button>
+                                <button class="btn btn-sm btn-outline-secondary move-back" data-id="@o.Id">Move Back</button>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ================= READY ================= -->
+        <div class="col-lg-4">
+            <h5 class="section-title mb-2">Ready</h5>
+            <div id="col-ready" class="orders-column">
+
+                @foreach (var o in Model.Ready)
+                {
+                    <div class="order-card" data-order-id="@o.Id">
+
+                        <div class="order-header">
+                            <strong>Order #@o.Id</strong>
+                            <small class="text-muted">
+                                @((o.CustomerName ?? "Walk-in"))
+                                • @o.CreatedAt?.ToLocalTime().ToString("HH:mm")
+                            </small>
+                        </div>
+
+                        <div class="order-body">
+                            @foreach (var it in o.OrderItems)
+                            {
+                                <div class="line-item">
+                                    <div><strong>@it.MenuItem?.Name</strong> x @it.Quantity</div>
+                                    <div class="text-muted small">@it.LineTotal.ToString("0.00")</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="order-footer d-flex justify-content-between align-items-center">
+                            <div><strong>Total:</strong> @((o.TotalAmount ?? 0).ToString("0.00"))</div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-success move-next" data-id="@o.Id">Move Next</button>
+                                <button class="btn btn-sm btn-outline-secondary move-back" data-id="@o.Id">Move Back</button>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div> <!-- row -->
+</div> <!-- container -->
+
+@section Scripts {
+    @* <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script> *@
+    <script src="~/js/kitchen.js"></script>
+}

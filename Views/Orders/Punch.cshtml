@@ -1,0 +1,285 @@
+@model AiBotOrderingSystem.Models.ViewModels.MenuPageVm
+@using Newtonsoft.Json
+
+@{
+    ViewData["Title"] = "Punch Order";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container-fluid mt-3">
+    <div class="row">
+
+        <!-- LEFT: CATEGORIES -->
+        <div class="col-md-2 border-end">
+            <h5>Categories</h5>
+
+            <div class="list-group" id="catList">
+                <a class="list-group-item list-group-item-action active" data-id="0">All</a>
+
+                @foreach (var c in Model.Categories)
+                {
+                    <a class="list-group-item list-group-item-action" data-id="@c.Id">@c.Name</a>
+                }
+            </div>
+
+            <hr />
+            <input id="searchBox" class="form-control" placeholder="Search..." />
+        </div>
+
+        <!-- CENTER: ITEMS -->
+        <div class="col-md-7">
+            <h5>Items</h5>
+            <div class="row" id="itemGrid"></div>
+        </div>
+
+        <!-- RIGHT: CART -->
+        <div class="col-md-3">
+            <h5>Cart</h5>
+
+            <div id="cartBox" class="border p-3" style="min-height:300px;"></div>
+
+            <div class="mt-3">
+                <label>Customer Name</label>
+                <input id="customerName" class="form-control mb-2" />
+
+                <label>Order Type</label>
+                <select id="orderType" class="form-select mb-2">
+                    <option value="0">Dine-In</option>
+                    <option value="1">Takeaway</option>
+                    <option value="2">Delivery</option>
+                </select>
+
+                <button id="placeBtn" class="btn btn-success w-100 mt-3">
+                    Place Order
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ITEM MODAL -->
+<div class="modal fade" id="itemModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="modalName" class="modal-title"></h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <p id="modalDesc" class="text-muted"></p>
+                <p><b>Price: ₹<span id="modalPrice"></span></b></p>
+
+                <label>Quantity</label>
+                <input id="modalQty" type="number" min="1" value="1" class="form-control w-25 mb-3" />
+
+                <h6>Addons</h6>
+                <div id="modalAddons" class="row"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="modalAddBtn" class="btn btn-primary">Add to cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@{
+    var itemsJson = JsonConvert.SerializeObject(
+        Model.MenuItems,
+        new JsonSerializerSettings {
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+        }
+    );
+}
+
+@section Scripts {
+
+<script>
+
+    // ===============================
+    // INITIAL DATA
+    // ===============================
+    const allItems = @Html.Raw(itemsJson);
+    let cart = [];
+
+    // ===============================
+    // RENDER ITEMS
+    // ===============================
+    function renderItems() {
+
+        const grid = document.getElementById("itemGrid");
+        const cat = document.querySelector("#catList .active").dataset.id;
+        const q = document.getElementById("searchBox").value.toLowerCase();
+
+        grid.innerHTML = "";
+
+        allItems
+            .filter(i => (cat == 0 || i.categoryId == parseInt(cat)))
+            .filter(i => i.name.toLowerCase().includes(q))
+            .forEach(i => {
+                grid.innerHTML += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="${i.imageUrl ?? '/noimg.png'}"
+                                 class="card-img-top" style="height:150px;object-fit:cover;">
+                            <div class="card-body">
+                                <h6>${i.name}</h6>
+                                <p class="text-muted small">${i.description ?? ''}</p>
+                                <p><b>₹${i.price}</b></p>
+
+                                <button class="btn btn-sm btn-primary"
+                                        onclick="openItem(${i.id})">
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+    }
+
+    document.querySelectorAll("#catList a").forEach(a => {
+        a.addEventListener("click", function () {
+            document.querySelectorAll("#catList a").forEach(x => x.classList.remove("active"));
+            this.classList.add("active");
+            renderItems();
+        });
+    });
+
+    document.getElementById("searchBox").addEventListener("input", renderItems);
+
+    renderItems();
+
+    // ===============================
+    // OPEN ITEM MODAL
+    // ===============================
+    let currentItem = null;
+
+    function openItem(id) {
+
+        currentItem = allItems.find(x => x.id == id);
+
+        document.getElementById("modalName").innerText = currentItem.name;
+        document.getElementById("modalDesc").innerText = currentItem.description ?? "";
+        document.getElementById("modalPrice").innerText = currentItem.price;
+        document.getElementById("modalQty").value = 1;
+
+        const adContainer = document.getElementById("modalAddons");
+        adContainer.innerHTML = "";
+
+        currentItem.addons.forEach(ad => {
+            adContainer.innerHTML += `
+                <div class="col-6">
+                    <input type="checkbox" value="${ad.id}" data-price="${ad.price}">
+                    ${ad.name} (+₹${ad.price})
+                </div>`;
+        });
+
+        new bootstrap.Modal(document.getElementById("itemModal")).show();
+    }
+
+    // ===============================
+    // ADD ITEM TO CART
+    // ===============================
+    document.getElementById("modalAddBtn").onclick = function () {
+
+        const qty = parseInt(document.getElementById("modalQty").value);
+
+        const addons = [];
+        document.querySelectorAll("#modalAddons input:checked").forEach(cb => {
+            addons.push({
+                addonId: parseInt(cb.value),
+                price: parseFloat(cb.dataset.price)
+            });
+        });
+
+        cart.push({
+            menuItemId: currentItem.id,
+            name: currentItem.name,
+            price: currentItem.price,
+            quantity: qty,
+            addons: addons
+        });
+
+        renderCart();
+        bootstrap.Modal.getInstance(document.getElementById("itemModal")).hide();
+    };
+
+    // ===============================
+    // RENDER CART
+    // ===============================
+    function renderCart() {
+
+        let html = "";
+        let total = 0;
+
+        cart.forEach((c, i) => {
+
+            let line = (c.price * c.quantity);
+            c.addons.forEach(a => line += a.price);
+            total += line;
+
+            html += `
+                <div class="border-bottom pb-2 mb-2">
+                    <b>${c.name}</b> (x${c.quantity})<br>
+                    <small>
+                        Addons: ${
+                            c.addons.length
+                                ? c.addons.map(a => `+₹${a.price}`).join(", ")
+                                : "None"
+                        }
+                    </small><br>
+                    <b>₹${line}</b>
+
+                    <button class="btn btn-sm btn-danger float-end"
+                            onclick="removeCart(${i})">
+                        x
+                    </button>
+                </div>`;
+        });
+
+        html += `<h5>Total: ₹${total}</h5>`;
+        document.getElementById("cartBox").innerHTML = html;
+    }
+
+    function removeCart(i) {
+        cart.splice(i, 1);
+        renderCart();
+    }
+
+    // ===============================
+    // PLACE ORDER  (POST /Orders/Create)
+    // ===============================
+    document.getElementById("placeBtn").onclick = async function () {
+
+        if (cart.length === 0) {
+            alert("Cart is empty.");
+            return;
+        }
+
+        const payload = {
+            customerName: document.getElementById("customerName").value,
+            orderType: parseInt(document.getElementById("orderType").value),
+            items: cart
+        };
+
+        const res = await fetch("/Orders/Create", {   // FIXED
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        alert("Order Placed. Order ID: " + data.id);
+
+        cart = [];
+        renderCart();
+    };
+
+</script>
+
+}

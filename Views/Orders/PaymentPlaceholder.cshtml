@@ -1,0 +1,15 @@
+@model AiBotOrderingSystem.Models.ViewModels.PaymentPlaceholderVm
+@{
+    ViewData["Title"] = "Payment";
+}
+
+<h2>Payment (placeholder)</h2>
+
+<p>Order id: <strong>@Model.OrderId</strong></p>
+<p>Amount: <strong>₹@Model.TotalAmount</strong></p>
+
+<form method="post" action="/Orders/PaymentComplete">
+    <input type="hidden" name="orderId" value="@Model.OrderId" />
+    <button name="result" value="success" class="btn btn-success">Simulate Success</button>
+    <button name="result" value="failure" class="btn btn-danger">Simulate Failure</button>
+</form>

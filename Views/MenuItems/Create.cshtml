@@ -1,0 +1,58 @@
+@model AiBotOrderingSystem.Models.DbFirst.MenuItem
+
+@{
+    ViewData["Title"] = "Create Menu Item";
+    var addons = ViewBag.AddOns as List<AiBotOrderingSystem.Models.DbFirst.Addon>;
+    var categories = ViewBag.Categories as List<AiBotOrderingSystem.Models.DbFirst.Category>;
+}
+
+<h2>Create Menu Item</h2>
+
+<form asp-action="Create" enctype="multipart/form-data">
+    <div class="form-group mb-2">
+        <label>Category</label>
+        <select class="form-control" asp-for="CategoryId">
+            <option value="">-- Select --</option>
+            @foreach (var c in categories)
+            {
+                <option value="@c.Id">@c.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Price</label>
+        <input asp-for="Price" class="form-control" />
+    </div>
+
+    <div class="form-group mb-2">
+        <label>Image</label>
+        <input type="file" asp-for="ImageFile" class="form-control" />
+    </div>
+
+    <h4>Select Add-Ons</h4>
+    <div class="mb-3">
+        @foreach (var add in addons)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="SelectedAddOns"
+                       value="@add.Id" id="addon_@add.Id">
+                <label class="form-check-label" for="addon_@add.Id">
+                    @add.Name (@add.Price.ToString("0.00"))
+                </label>
+            </div>
+        }
+    </div>
+
+    <button class="btn btn-success">Create</button>
+</form>

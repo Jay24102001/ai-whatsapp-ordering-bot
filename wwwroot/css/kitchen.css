@@ -1,0 +1,152 @@
+/* ========================= */
+
+
+/* SECTION TITLES            */
+
+
+/* ========================= */
+
+.kitchen-page .section-title {
+    font-weight: 600;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+}
+
+
+/* ========================= */
+
+
+/* COLUMN CONTAINER          */
+
+
+/* ========================= */
+
+.orders-column {
+    min-height: 360px;
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ========================= */
+
+
+/* ORDER CARD                */
+
+
+/* ========================= */
+
+.order-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+    border-left: 4px solid #0d6efd;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    transition: transform .18s ease, box-shadow .18s ease, opacity .2s ease;
+}
+
+
+/* Highlight animation when updated */
+
+.card-pop {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 12px 28px rgba(20, 20, 20, 0.09);
+}
+
+
+/* ========================= */
+
+
+/* ORDER HEADER              */
+
+
+/* ========================= */
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.order-header strong {
+    font-size: 1.05rem;
+}
+
+.order-header small {
+    opacity: 0.8;
+}
+
+
+/* ========================= */
+
+
+/* ORDER BODY                */
+
+
+/* ========================= */
+
+.order-body {
+    margin-bottom: 10px;
+}
+
+
+/* Line item formatting */
+
+.line-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+}
+
+
+/* No dashed line for the last item */
+
+.line-item:last-child {
+    border-bottom: none;
+}
+
+
+/* ========================= */
+
+
+/* ORDER FOOTER              */
+
+
+/* ========================= */
+
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-footer strong {
+    font-size: 0.95rem;
+}
+
+
+/* ========================= */
+
+
+/* BUTTONS                   */
+
+
+/* ========================= */
+
+.btn-group .btn {
+    min-width: 115px;
+}
+
+
+/* optional: make buttons slightly rounded */
+
+.btn {
+    border-radius: 6px;
+}

@@ -1,0 +1,40 @@
+@model AiBotOrderingSystem.Models.DbFirst.Order
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<h2>Order #@Model.Id</h2>
+
+<p><strong>Customer:</strong> @Model.CustomerName</p>
+<p><strong>Total:</strong> ₹@(Model.TotalAmount ?? 0)</p>
+<p><strong>Status:</strong> @Model.Status - @Model.PaymentStatus</p>
+
+<h4>Items</h4>
+<table class="table">
+    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Line</th></tr></thead>
+    <tbody>
+    @foreach(var it in Model.OrderItems)
+    {
+        <tr>
+            <td>@it.MenuItem?.Name</td>
+            <td>@it.Quantity</td>
+            <td>₹@it.PriceAtOrder</td>
+            <td>₹@it.LineTotal</td>
+        </tr>
+        if(it.OrderItemAddons != null && it.OrderItemAddons.Any())
+        {
+            <tr>
+                <td colspan="4">
+                    <strong>Addons:</strong>
+                    <ul>
+                    @foreach(var a in it.OrderItemAddons)
+                    {
+                        <li>@a.Addon?.Name - ₹@a.AddonPriceAtOrder</li>
+                    }
+                    </ul>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>

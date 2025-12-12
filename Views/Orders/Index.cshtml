@@ -1,0 +1,131 @@
+@model IEnumerable<AiBotOrderingSystem.Models.DbFirst.Order>
+
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h2 class="mb-4">All Orders</h2>
+
+<!-- ========================== -->
+<!-- FILTER BAR (UI-ONLY) -->
+<!-- ========================== -->
+
+<div class="card p-3 mb-4">
+    <div class="row g-3">
+
+        <div class="col-md-3">
+            <input type="text" id="searchInput" placeholder="Search customer..." class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <select id="statusFilter" class="form-select">
+                <option value="">All Status</option>
+                <option value="New">New</option>
+                <option value="Preparing">Preparing</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <input type="date" id="fromDate" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <input type="date" id="toDate" class="form-control" />
+        </div>
+
+        <div class="col-md-3 mt-3">
+            <button class="btn btn-secondary w-100" onclick="resetFilters()">Reset</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================== -->
+<!-- ORDERS TABLE -->
+<!-- ========================== -->
+
+<table class="table table-striped table-bordered align-middle" id="ordersTable">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody id="ordersBody">
+        @foreach (var o in Model)
+        {
+            <tr>
+                <td>@o.Id</td>
+                <td>@o.CustomerName</td>
+                <td>@(o.TotalAmount ?? 0).ToString("0.00")</td>
+                <td>@o.Status</td>
+                <td>@o.CreatedAt?.ToString("yyyy-MM-dd")</td> <!-- for date filtering -->
+                <td>
+                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@o.Id">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div id="noResults" class="alert alert-info mt-3" style="display:none;">
+    No matching orders found.
+</div>
+
+@section Scripts {
+<script>
+    function filterTable() {
+        const search = document.getElementById("searchInput").value.toLowerCase();
+        const status = document.getElementById("statusFilter").value;
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+
+        let found = false;
+
+        const rows = document.querySelectorAll("#ordersBody tr");
+        rows.forEach(row => {
+            const customer = row.children[1].innerText.toLowerCase();
+            const rowStatus = row.children[3].innerText;
+            const date = row.children[4].innerText; // yyyy-MM-dd
+
+            let show = true;
+
+            // Search filter
+            if (search && !customer.includes(search)) show = false;
+
+            // Status filter
+            if (status && rowStatus !== status) show = false;
+
+            // Date range filter
+            if (from && date < from) show = false;
+            if (to && date > to) show = false;
+
+            row.style.display = show ? "" : "none";
+            if (show) found = true;
+        });
+
+        document.getElementById("noResults").style.display = found ? "none" : "";
+    }
+
+    // Attach events
+    document.getElementById("searchInput").addEventListener("input", filterTable);
+    document.getElementById("statusFilter").addEventListener("change", filterTable);
+    document.getElementById("fromDate").addEventListener("change", filterTable);
+    document.getElementById("toDate").addEventListener("change", filterTable);
+
+    function resetFilters() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("statusFilter").value = "";
+        document.getElementById("fromDate").value = "";
+        document.getElementById("toDate").value = "";
+        filterTable();
+    }
+</script>
+}
